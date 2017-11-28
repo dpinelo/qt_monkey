@@ -337,21 +337,11 @@ void QtMonkeyWindow::logNewLine(MsgType msgType, const QString &msg)
         color = QStringLiteral("Lime");
         break;
     }
-    QString text;
+    QString text = msg;
     if (!color.isEmpty())
-        text = QStringLiteral("<font color=\"%1\">").arg(color);
-#if QT_VERSION < 0x050000
-    text += Qt::escape(msg);
-#else
-    text += msg.toHtmlEscaped();
-#endif
-    text.replace("\n", "<br>");
-    if (!color.isEmpty())
-        text += "</font>";
+        text = color.append(": ").append(msg);
 
-    text += "<br>";
-
-    teLog_->insertHtml(text);
+    teLog_->appendPlainText(text);
 }
 
 void QtMonkeyWindow::onMonkeyScriptEnd() { changeState(State::DoNothing); }

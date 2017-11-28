@@ -1,4 +1,4 @@
-//#define DEBUG_SCRIPT_API
+#define DEBUG_SCRIPT_API
 #include "script_api.hpp"
 
 #include <cassert>
@@ -875,6 +875,42 @@ void ScriptAPI::keyClick(const QString &widgetName, const QString &keyseqStr)
                             modifiers, -1);
             DBGPRINT("%s: key(%s) click for widget DONE", Q_FUNC_INFO,
                      qPrintable(keySeq.toString()));
+            return QString();
+        },
+        newEventLoopWaitTimeoutSecs_);
+
+    if (!errMsg.isEmpty()) {
+        DBGPRINT("%s: error %s", Q_FUNC_INFO, qPrintable(errMsg));
+        agent_.throwScriptError(std::move(errMsg));
+    }
+}
+
+void ScriptAPI::keyClicks(const QString &widgetName, const QString &keySeq)
+{
+    Step step(agent_);
+
+    DBGPRINT("%s begin name %s, keys %s", Q_FUNC_INFO, qPrintable(widgetName),
+             qPrintable(keySeq));
+
+    QWidget *w = getWidgetWithSuchName(agent_, widgetName,
+                                       waitWidgetAppearTimeoutSec_, true);
+
+    if (w == nullptr) {
+        agent_.throwScriptError(
+            QStringLiteral("Can not find widget with such name %1")
+                .arg(widgetName));
+        return;
+    }
+
+    QString errMsg = agent_.runCodeInGuiThreadSyncWithTimeout(
+        [w, keySeq] {
+            if (!w->hasFocus())
+                w->setFocus(Qt::ShortcutFocusReason);
+            DBGPRINT("%s: key(%s) clicks for widget", Q_FUNC_INFO,
+                     qPrintable(keySeq));
+            QTest::keyClicks(w, keySeq);
+            DBGPRINT("%s: key(%s) clicks for widget DONE", Q_FUNC_INFO,
+                     qPrintable(keySeq));
             return QString();
         },
         newEventLoopWaitTimeoutSecs_);

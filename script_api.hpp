@@ -64,6 +64,13 @@ public slots:
      */
     void keyClick(const QString &widgetName, const QString &keyseq);
 
+    /**
+      * Emulation of key press sequence.
+      * @param widgetName name of widget
+      * @param keyseq Sequence
+      * */
+    void keyClicks(const QString &widgetName, const QString &keyseq);
+
     //@{
     /**
      * Group of functions to emulate activate item (menu item, list item etc)

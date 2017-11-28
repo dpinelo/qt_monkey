@@ -224,12 +224,10 @@
        </item>
       </layout>
      </widget>
-     <widget class="QTextEdit" name="teLog_">
-      <property name="readOnly">
-       <bool>true</bool>
-      </property>
-     </widget>
     </widget>
+   </item>
+   <item>
+    <widget class="QPlainTextEdit" name="teLog_"/>
    </item>
    <item>
     <layout class="QHBoxLayout">
