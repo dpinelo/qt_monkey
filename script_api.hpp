@@ -5,6 +5,7 @@
 
 class QPoint;
 class QAbstractItemView;
+class QAction;
 
 namespace qt_monkey_agent
 {
@@ -15,6 +16,9 @@ void moveMouseTo(Agent &, const QPoint &point);
 void clickInGuiThread(Agent &agent, const QPoint &posA, QWidget &wA,
                       Qt::MouseButton btn, bool dblClick);
 QWidget *getWidgetWithSuchName(Agent &agent, const QString &objectName,
+                               const int maxTimeToFindWidgetSec,
+                               bool shouldBeEnabled);
+QAction *getActionWithSuchName(Agent &agent, const QString &objectName,
                                const int maxTimeToFindWidgetSec,
                                bool shouldBeEnabled);
 /**
@@ -70,6 +74,12 @@ public slots:
       * @param keyseq Sequence
       * */
     void keyClicks(const QString &widgetName, const QString &keyseq);
+
+    /**
+      * Missing functionality: used to "activate" menu item
+      * @param widgetName
+      * */
+    void activateMenuItem(const QString &actionName);
 
     //@{
     /**

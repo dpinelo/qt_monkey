@@ -193,7 +193,7 @@ static QString qmenuActivateClick(const EventInfo &eventInfo)
         if (!widget->objectName().isEmpty() /*widgetName != "<unknown name>"*/)
             res = QString("Test.activateItem('%1', '%2');")
                       .arg(eventInfo.widgetName)
-                      .arg(act->text());
+                      .arg(act->objectName());
         else
             res = QString("Test.activateMenuItem('%1');").arg(act->text());
     }
