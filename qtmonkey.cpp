@@ -20,13 +20,7 @@
 #include "json11.hpp"
 #include "qtmonkey_app_api.hpp"
 
-#ifdef DEBUG_MOD_QTMONKEY
 #define DBGPRINT(fmt, ...) qDebug(fmt, __VA_ARGS__)
-#else
-#define DBGPRINT(fmt, ...)                                                     \
-    do {                                                                       \
-    } while (false)
-#endif
 
 using qt_monkey_agent::Private::PacketTypeForAgent;
 using qt_monkey_agent::Private::Script;

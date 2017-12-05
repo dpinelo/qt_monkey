@@ -1,4 +1,3 @@
-#define DEBUG_SCRIPT_API
 #include "script_api.hpp"
 
 #include <cassert>
@@ -34,13 +33,7 @@
 using qt_monkey_agent::ScriptAPI;
 using qt_monkey_agent::Agent;
 
-#ifdef DEBUG_SCRIPT_API
 #define DBGPRINT(fmt, ...) qDebug(fmt, __VA_ARGS__)
-#else
-#define DBGPRINT(fmt, ...)                                                     \
-    do {                                                                       \
-    } while (false)
-#endif
 
 namespace
 {
@@ -91,7 +84,7 @@ static QWidget *bruteForceWidgetSearch(const QString &objectName,
 static QWidget *doGetWidgetWithSuchName(const QString &objectName,
                                         bool shouldBeEnabled)
 {
-    QStringList names = objectName.split('.');
+    QStringList names = objectName.split("*.*");
 
     if (names.isEmpty()) {
         DBGPRINT("%s: list of widget's name empty\n", Q_FUNC_INFO);
@@ -116,111 +109,6 @@ static QWidget *doGetWidgetWithSuchName(const QString &objectName,
              qPrintable(mainWidgetName));
     QList<QObject *> lst
         = QCoreApplication::instance()->findChildren<QObject *>(mainWidgetName);
-    if (lst.isEmpty()) {
-        for (QWidget *widget : QApplication::topLevelWidgets()) {
-            if (mainWidgetName == widget->objectName()) {
-                lst << widget;
-                break;
-            } else {
-                lst = widget->findChildren<QObject *>(mainWidgetName);
-            }
-
-            if (!lst.isEmpty())
-                break;
-        }
-    }
-    const QRegExp class_name_rx("^<class_name=([^>]+)>$");
-    if (lst.isEmpty()) {
-        DBGPRINT("%s: list of widget's name empty, start bruteforce\n",
-                 Q_FUNC_INFO);
-        //! \todo if there is class name use it in brute search
-        QString className;
-        if (class_name_rx.indexIn(mainWidgetName) != -1)
-            className = class_name_rx.cap(1);
-        QWidget *w = bruteForceWidgetSearch(mainWidgetName, className,
-                                            shouldBeEnabled);
-        if (w == nullptr)
-            return nullptr;
-        lst << w;
-    }
-
-    //! \todo may be try all variants, instead of lst.first?
-    QWidget *w = qobject_cast<QWidget *>(lst.first());
-    assert(w != nullptr);
-    DBGPRINT("%s: we found %s", Q_FUNC_INFO, qPrintable(w->objectName()));
-    names.removeFirst();
-
-    while (!names.isEmpty()) {
-        const QObjectList &clist = w->children();
-        const QString &el = names.first();
-        QString class_name;
-        int class_order = 0;
-        if (class_name_rx.indexIn(el) != -1) {
-            class_name = class_name_rx.cap(1);
-            const QStringList res
-                = class_name.split(",", QString::SkipEmptyParts);
-            if (res.size() == 0)
-                class_name = "";
-            else
-                class_name = res[0];
-            if (res.size() > 1) {
-                bool ok = false;
-                class_order = res[1].toInt(&ok);
-                if (!ok)
-                    class_order = 0;
-            }
-            DBGPRINT("%s: search object with class: %s, order %d", Q_FUNC_INFO,
-                     qPrintable(class_name), class_order);
-        }
-        int order = 0;
-        QObjectList::const_iterator it;
-        for (it = clist.begin(); it != clist.end(); ++it) {
-            if ((!class_name.isEmpty()
-                 && class_name == (*it)->metaObject()->className())
-                || (*it)->objectName() == el) {
-                DBGPRINT("%s: found widget %s, order %d", Q_FUNC_INFO,
-                         qPrintable(el), order);
-                w = qobject_cast<QWidget *>(*it);
-                if (shouldBeEnabled && !(w->isVisible() && w->isEnabled()))
-                    continue;
-                if (order++ != class_order)
-                    continue;
-
-                names.removeFirst();
-                break;
-            }
-        }
-
-        if (it == clist.end()) {
-            DBGPRINT("(%s, %d): Can not find object with such name %s, try "
-                     "brute search",
-                     Q_FUNC_INFO, __LINE__, qPrintable(el));
-            w = bruteForceWidgetSearch(el, class_name, shouldBeEnabled);
-            if (w == nullptr) {
-                DBGPRINT("(%s, %d) brute force failed", Q_FUNC_INFO, __LINE__);
-                return nullptr;
-            }
-            names.removeFirst();
-        }
-    }
-
-    return w;
-}
-
-static QAction *doGetActionWithSuchName(const QString &objectName,
-                                        bool shouldBeEnabled)
-{
-    QStringList names = objectName.split('.');
-
-    if (names.isEmpty()) {
-        DBGPRINT("%s: list of action's name empty\n", Q_FUNC_INFO);
-        return nullptr;
-    }
-
-    const QString &mainWidgetName = names.first();
-    DBGPRINT("(%s, %d): search widget with such name %s", Q_FUNC_INFO, __LINE__,
-             qPrintable(mainWidgetName));
-    QWidget<QWidget *> lst = QCoreApplication::instance()->findChildren<QWidget *>(mainWidgetName);
     if (lst.isEmpty()) {
         for (QWidget *widget : QApplication::topLevelWidgets()) {
             if (mainWidgetName == widget->objectName()) {
@@ -428,7 +316,6 @@ static QString activateItemInGuiThread(qt_monkey_agent::Agent &agent,
 
     if (auto menu = qobject_cast<QMenu *>(w)) {
         const QList<QAction *> acts = w->actions();
-
         for (QAction *action : acts) {
             DBGPRINT("%s: check %s", Q_FUNC_INFO, qPrintable(action->text()));
             if (action->text() == itemName) {
@@ -441,7 +328,7 @@ static QString activateItemInGuiThread(qt_monkey_agent::Agent &agent,
             }
         }
         DBGPRINT("%s: end: not found %s", Q_FUNC_INFO, qPrintable(itemName));
-        return QStringLiteral("Item `%1' not found").arg(itemName);
+        return QStringLiteral("Item `%1' not found.").arg(itemName);
     } else if (auto tw = qobject_cast<QTreeWidget *>(w)) {
         const QList<QTreeWidgetItem *> til
             = tw->findItems(itemName, matchFlag | Qt::MatchRecursive);
@@ -607,9 +494,7 @@ void qt_monkey_agent::clickInGuiThread(qt_monkey_agent::Agent &agent,
         DBGPRINT("%s: this is line edit", Q_FUNC_INFO);
 // some times click on line edit do not give
 // focus to it, because of different size on different OSes
-#ifdef DEBUG_SCRIPT_API
-        QRect cr =
-#endif
+        QRect cr = le->rect();
             MyLineEdit::adjustedContentsRect(*le);
         DBGPRINT("%s: begin of content of QLineEdit  x %d, y %d, w %d, h %d",
                  Q_FUNC_INFO, cr.x(), cr.y(), cr.width(), cr.height());
@@ -629,45 +514,6 @@ QWidget *qt_monkey_agent::getWidgetWithSuchName(
 {
     DBGPRINT("%s begin, search %s", Q_FUNC_INFO, qPrintable(objectName));
     QWidget *w = nullptr;
-
-    const int maxAttempts
-        = (maxTimeToFindWidgetSec * 1000) / sleepTimeForWaitWidgetMs + 1;
-    for (int i = 0; i < maxAttempts; ++i) {
-        agent.runCodeInGuiThreadSync([&w, &objectName, shouldBeEnabled] {
-            w = doGetWidgetWithSuchName(objectName, shouldBeEnabled);
-            DBGPRINT("%s, %d: doGetWidgetWithSuchName return w '%s'",
-                     Q_FUNC_INFO, __LINE__,
-                     w != nullptr ? qPrintable(w->objectName()) : "nullptr");
-            if (w != nullptr && canNotFind(*w)) {
-                DBGPRINT("%s: canNotFind return true", Q_FUNC_INFO);
-                w = nullptr;
-            }
-            return QString();
-        });
-
-        if (w == nullptr
-            || (shouldBeEnabled && !(w->isVisible() && w->isEnabled()))) {
-            DBGPRINT("%s, %d: w '%s', v %d e %d", Q_FUNC_INFO, __LINE__,
-                     w != nullptr ? qPrintable(w->objectName()) : "nullptr",
-                     static_cast<int>(w ? w->isVisible() : 0),
-                     static_cast<int>(w ? w->isEnabled() : 0));
-            w = nullptr;
-            std::this_thread::sleep_for(
-                std::chrono::milliseconds(sleepTimeForWaitWidgetMs));
-        } else {
-            DBGPRINT("%s: widget found", Q_FUNC_INFO);
-            break;
-        }
-    }
-    return w;
-}
-
-QAction *qt_monkey_agent::getActionWithSuchName(
-    qt_monkey_agent::Agent &agent, const QString &objectName,
-    const int maxTimeToFindWidgetSec, bool shouldBeEnabled)
-{
-    DBGPRINT("%s begin, search %s", Q_FUNC_INFO, qPrintable(objectName));
-    QAction *w = nullptr;
 
     const int maxAttempts
         = (maxTimeToFindWidgetSec * 1000) / sleepTimeForWaitWidgetMs + 1;
@@ -1035,41 +881,6 @@ void ScriptAPI::keyClicks(const QString &widgetName, const QString &keySeq)
 
     DBGPRINT("%s begin name %s, keys %s", Q_FUNC_INFO, qPrintable(widgetName),
              qPrintable(keySeq));
-
-    QWidget *w = getWidgetWithSuchName(agent_, widgetName,
-                                       waitWidgetAppearTimeoutSec_, true);
-
-    if (w == nullptr) {
-        agent_.throwScriptError(
-            QStringLiteral("Can not find widget with such name %1")
-                .arg(widgetName));
-        return;
-    }
-
-    QString errMsg = agent_.runCodeInGuiThreadSyncWithTimeout(
-        [w, keySeq] {
-            if (!w->hasFocus())
-                w->setFocus(Qt::ShortcutFocusReason);
-            DBGPRINT("%s: key(%s) clicks for widget", Q_FUNC_INFO,
-                     qPrintable(keySeq));
-            QTest::keyClicks(w, keySeq);
-            DBGPRINT("%s: key(%s) clicks for widget DONE", Q_FUNC_INFO,
-                     qPrintable(keySeq));
-            return QString();
-        },
-        newEventLoopWaitTimeoutSecs_);
-
-    if (!errMsg.isEmpty()) {
-        DBGPRINT("%s: error %s", Q_FUNC_INFO, qPrintable(errMsg));
-        agent_.throwScriptError(std::move(errMsg));
-    }
-}
-
-void ScriptAPI::activateMenuItem(const QString &actionName)
-{
-    Step step(agent_);
-
-    DBGPRINT("%s begin name %s", Q_FUNC_INFO, qPrintable(widgetName));
 
     QWidget *w = getWidgetWithSuchName(agent_, widgetName,
                                        waitWidgetAppearTimeoutSec_, true);

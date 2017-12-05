@@ -2,8 +2,7 @@
 
 #include <ostream>
 
-#include <QtCore/QProcess>
-#include <QtCore/QString>
+#include <QtCore>
 
 // for translation
 #define T_(str) QString(str)
@@ -31,4 +30,24 @@ inline std::ostream &operator<<(std::ostream &os, const QByteArray &str)
     std::copy(str.begin(), str.end(), std::ostreambuf_iterator<char>(os));
     return os;
 }
+
+/*
+QFile debugOutput_;
+
+inline void dbgPrint(const QString &line)
+{
+    if ( !debugOutput_.isOpen() )
+    {
+        const QString fileName = QString("%1/%2.log").arg(qApp->applicationDirPath(), QDateTime::currentDateTime().toString("YYYYMMDDHHmmSS"));
+        debugOutput_.setFileName(fileName);
+        debugOutput_.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    }
+    if ( debugOutput_.isOpen() )
+    {
+        QTextStream stream(debugOutput_);
+        stream << line << "\n";
+        stream.flush();
+    }
+}
+*/
 }

@@ -193,10 +193,9 @@ static QString qmenuActivateClick(const EventInfo &eventInfo)
         if (!widget->objectName().isEmpty() /*widgetName != "<unknown name>"*/)
             res = QString("Test.activateItem('%1', '%2');")
                       .arg(eventInfo.widgetName)
-                      .arg(act->objectName());
+                      .arg(act->text());
         else
-            res = QString("Test.activateMenuItem('%1');").arg(act->text());
-    }
+            res = QString("Test.activateMenuItem('%1');").arg(act->text());    }
     return res;
 }
 
@@ -690,15 +689,15 @@ QString qt_monkey_agent::fullQtWidgetId(const QObject &w)
              w.metaObject()->className(), qPrintable(res));
     QObject *cur_obj = w.parent();
     while (cur_obj != nullptr) {
-        res = qtObjectId(*cur_obj) + "." + res;
+        res = qtObjectId(*cur_obj) + "*.*" + res;
         cur_obj = cur_obj->parent();
     }
     return res;
 }
 
-UserEventsAnalyzer::UserEventsAnalyzer(
-    qt_monkey_agent::Agent &agent, const QKeySequence &showObjectShortCut,
-    std::list<CustomEventAnalyzer> customEventAnalyzers, QObject *parent)
+UserEventsAnalyzer::UserEventsAnalyzer(qt_monkey_agent::Agent &agent, const QKeySequence &showObjectShortCut,
+                                       std::list<CustomEventAnalyzer> customEventAnalyzers,
+                                       QObject *parent)
     : QObject(parent), agent_(agent),
       customEventAnalyzers_(std::move(customEventAnalyzers)),
       generateScriptCmd_(

@@ -75,12 +75,6 @@ public slots:
       * */
     void keyClicks(const QString &widgetName, const QString &keyseq);
 
-    /**
-      * Missing functionality: used to "activate" menu item
-      * @param widgetName
-      * */
-    void activateMenuItem(const QString &actionName);
-
     //@{
     /**
      * Group of functions to emulate activate item (menu item, list item etc)

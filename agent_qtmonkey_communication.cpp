@@ -16,13 +16,7 @@ using namespace qt_monkey_agent::Private;
 
 static const char QTMONKEY_PORT_ENV_NAME[] = "QTMONKEY_PORT";
 
-#ifdef DEBUG_AGENT_QTMONKEY_COMMUNICATION
 #define DBGPRINT(fmt, ...) qDebug(fmt, __VA_ARGS__)
-#else
-#define DBGPRINT(fmt, ...)                                                     \
-    do {                                                                       \
-    } while (false)
-#endif
 
 namespace
 {

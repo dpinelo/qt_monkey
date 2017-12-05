@@ -39,13 +39,7 @@ Agent *Agent::gAgent_ = nullptr;
         return;                                                                \
     }
 
-#ifdef DEBUG_AGENT
 #define DBGPRINT(fmt, ...) qDebug(fmt, __VA_ARGS__)
-#else
-#define DBGPRINT(fmt, ...)                                                     \
-    do {                                                                       \
-    } while (false)
-#endif
 
 namespace
 {
