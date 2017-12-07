@@ -12,13 +12,13 @@ public:
     BaseEditDlg(QWidget *parent = 0, Qt::WindowFlags fl = Qt::WindowFlags());
     virtual ~BaseEditDlg();
 
-    const QVariantMap data() const;
+    virtual const QVariantMap editedData();
 
-    static bool addRecord(QSqlTableModel *model, const QVariantMap &data, int row);
+    static bool addRecord(QSqlTableModel *model, const QVariantMap &editedData, int row);
     static bool editRecord(QSqlTableModel *model, int row, BaseEditDlg *dlg);
 
 public slots:
-    virtual void setData(const QVariantMap &data);
+    virtual void setEditedData(const QVariantMap &editedData);
     void accept() Q_DECL_OVERRIDE;
     void reject() Q_DECL_OVERRIDE;
 

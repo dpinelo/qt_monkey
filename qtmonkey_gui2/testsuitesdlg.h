@@ -9,7 +9,7 @@ class TestSuitesDlg;
 
 class TestSuitesDlgPrivate;
 
-class TestSuitesDlg : public QDialog
+class TestSuitesDlg : public QMainWindow
 {
     Q_OBJECT
 

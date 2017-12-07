@@ -3,6 +3,7 @@
 #include <QtSql>
 #include "testsuiteseditdlg.h"
 #include "baseeditdlg.h"
+#include "database.h"
 
 class TestSuitesDlgPrivate
 {
@@ -15,16 +16,45 @@ public:
 
     }
 
+    bool initDatabase();
     bool initTableView();
 };
 
+bool TestSuitesDlgPrivate::initDatabase()
+{
+    const QString dbPath = Database::dbPath();
+    QFileInfo fi(dbPath);
+    bool databaseExist = fi.exists();
+    if ( !Database::openSQLite() )
+    {
+        QMessageBox::warning(q_ptr,
+                             qApp->applicationName(),
+                             QObject::tr("Can not open database.\Error: %1").arg(Database::m_lastErrorMessage),
+                             QMessageBox::Ok);
+        return false;
+    }
+    if ( !databaseExist && !Database::initDatabase() )
+    {
+        QMessageBox::warning(q_ptr,
+                             qApp->applicationName(),
+                             QObject::tr("Can not init database.\Error: %1").arg(Database::m_lastErrorMessage),
+                             QMessageBox::Ok);
+        return false;
+    }
+    return true;
+}
 
 TestSuitesDlg::TestSuitesDlg(QWidget *parent, Qt::WindowFlags fl) :
-    QDialog(parent, fl),
+    QMainWindow(parent, fl),
     ui(new Ui::TestSuitesDlg),
     d(new TestSuitesDlgPrivate(this))
 {
     ui->setupUi(this);
+
+    if ( !d->initDatabase() )
+    {
+        close();
+    }
 
     if ( !d->initTableView() )
     {
@@ -45,7 +75,7 @@ void TestSuitesDlg::on_pbAdd_clicked()
     {
         return;
     }
-    const QVariantMap data = dlg->data();
+    const QVariantMap data = dlg->editedData();
     const int row = d->m_model->rowCount();
     BaseEditDlg::addRecord(d->m_model, data, row);
 }
@@ -66,6 +96,14 @@ void TestSuitesDlg::on_pbRemove_clicked()
 {
     const QModelIndexList selectedRows = ui->tableView->selectionModel()->selectedRows();
     if ( selectedRows.isEmpty() )
+    {
+        return;
+    }
+    int ret = QMessageBox::question(this,
+                                    qApp->applicationName(),
+                                    tr("Are you sure you want to delete selected record?"),
+                                    QMessageBox::Yes | QMessageBox::No);
+    if ( ret == QMessageBox::No )
     {
         return;
     }
@@ -93,7 +131,6 @@ bool TestSuitesDlgPrivate::initTableView()
     m_model->setSort(m_model->fieldIndex("name"), Qt::AscendingOrder);
     m_model->setEditStrategy(QSqlTableModel::OnManualSubmit);
     q_ptr->ui->tableView->setModel(m_model);
-    q_ptr->ui->tableView->resizeColumnsToContents();
 
     QHash<QString, QString> columnNames;
     columnNames[QStringLiteral("name")] = "Name";
@@ -113,5 +150,6 @@ bool TestSuitesDlgPrivate::initTableView()
                              QObject::tr("An error ocurred trying to access test suites.\nError: %1").arg(m_model->lastError().text()));
         return false;
     }
+    q_ptr->ui->tableView->resizeColumnsToContents();
     return true;
 }

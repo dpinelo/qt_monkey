@@ -17,7 +17,7 @@ class TestEditDlg : public BaseEditDlg
     friend class TestEditDlgPrivate;
 
 public:
-    explicit TestEditDlg(QWidget *parent = 0);
+    explicit TestEditDlg(int idTestSuite, QWidget *parent = 0);
     ~TestEditDlg();
 
     enum class State {
@@ -31,8 +31,10 @@ public:
         Protocol,
     };
 
+    const QVariantMap editedData() Q_DECL_OVERRIDE;
+
 public slots:
-    void setData(const QVariantMap &data);
+    void setEditedData(const QVariantMap &editedData);
     void accept() Q_DECL_OVERRIDE Q_DECL_FINAL;
     void reject() Q_DECL_OVERRIDE Q_DECL_FINAL;
     void on_pbRecord_clicked();

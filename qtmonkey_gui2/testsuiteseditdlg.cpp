@@ -18,7 +18,6 @@ public:
     bool initTestModel();
 };
 
-
 TestSuitesEditDlg::TestSuitesEditDlg(QWidget *parent, Qt::WindowFlags fl) :
     BaseEditDlg(parent, fl),
     ui(new Ui::TestSuitesEditDlg),
@@ -37,9 +36,9 @@ TestSuitesEditDlg::~TestSuitesEditDlg()
     delete ui;
 }
 
-void TestSuitesEditDlg::setData(const QVariantMap &data)
+void TestSuitesEditDlg::setEditedData(const QVariantMap &data)
 {
-    BaseEditDlg::setData(data);
+    BaseEditDlg::setEditedData(data);
     d->initTestModel();
     ui->pbAdd->setEnabled(true);
     ui->pbEdit->setEnabled(true);
@@ -87,14 +86,18 @@ void TestSuitesEditDlg::on_pbAdd_clicked()
                              tr("You must set executable path first."));
         return;
     }
-    QScopedPointer<TestEditDlg> dlg (new TestEditDlg(this));
+    QScopedPointer<TestEditDlg> dlg (new TestEditDlg(m_data.value(QStringLiteral("id")).toInt(), this));
     dlg->setPath(ui->leExecutablePath->text());
     dlg->setArguments(ui->leArguments->text());
+    dlg->setModal(true);
+    QVariantMap data;
+    data["idtestsuite"] = m_data.value(QStringLiteral("id")).toInt();
+    dlg->setEditedData(data);
     if ( dlg->exec() == QDialog::Rejected )
     {
         return;
     }
-    const QVariantMap data = dlg->data();
+    data = dlg->editedData();
     const int row = d->m_model->rowCount();
     BaseEditDlg::addRecord(d->m_model, data, row);
 }
@@ -113,17 +116,25 @@ void TestSuitesEditDlg::on_pbEdit_clicked()
     {
         return;
     }
-    QScopedPointer<TestEditDlg> dlg (new TestEditDlg(this));
+    QScopedPointer<TestEditDlg> dlg (new TestEditDlg(m_data.value(QStringLiteral("id")).toInt(), this));
     dlg->setPath(ui->leExecutablePath->text());
     dlg->setArguments(ui->leArguments->text());
     const int row = selectedRows.first().row();
     BaseEditDlg::editRecord(d->m_model, row, dlg.data());
 }
 
-void TestSuitesEditDlg::on_obRemove_clicked()
+void TestSuitesEditDlg::on_pbRemove_clicked()
 {
     const QModelIndexList selectedRows = ui->tableView->selectionModel()->selectedRows();
     if ( selectedRows.isEmpty() )
+    {
+        return;
+    }
+    int ret = QMessageBox::question(this,
+                                    qApp->applicationName(),
+                                    tr("Are you sure you want to delete selected record?"),
+                                    QMessageBox::Yes | QMessageBox::No);
+    if ( ret == QMessageBox::No )
     {
         return;
     }
@@ -143,12 +154,11 @@ bool TestSuitesEditDlgPrivate::initTestModel()
     QSqlDatabase db = QSqlDatabase::database();
     m_model = new QSqlTableModel(q_ptr, db);
     m_model->setTable("testsuitestest");
-    const QString filter = QStringLiteral("idtestsuite=%1").arg(q_ptr->data().value(QStringLiteral("id")).toString());
+    const QString filter = QStringLiteral("idtestsuite=%1").arg(q_ptr->editedData().value(QStringLiteral("id")).toString());
     m_model->setFilter(filter);
     m_model->setSort(m_model->fieldIndex("position"), Qt::AscendingOrder);
     m_model->setEditStrategy(QSqlTableModel::OnManualSubmit);
     q_ptr->ui->tableView->setModel(m_model);
-    q_ptr->ui->tableView->resizeColumnsToContents();
 
     QHash<QString, QString> columnNames;
     columnNames[QStringLiteral("name")] = "Name";
@@ -169,5 +179,6 @@ bool TestSuitesEditDlgPrivate::initTestModel()
                              QObject::tr("An error ocurred trying to access test.\nError: %1").arg(m_model->lastError().text()));
         return false;
     }
+    q_ptr->ui->tableView->resizeColumnsToContents();
     return true;
 }

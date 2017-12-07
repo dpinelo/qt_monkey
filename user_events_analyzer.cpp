@@ -791,6 +791,12 @@ bool UserEventsAnalyzer::alreadySawSuchMouseEvent(const QString &widgetName,
 
 bool UserEventsAnalyzer::eventFilter(QObject *obj, QEvent *event)
 {
+    // We are only to pass spontaneous events
+    if ( !event->spontaneous() )
+    {
+        return QObject::eventFilter(obj, event);
+    }
+
     switch (event->type()) {
     case QEvent::KeyPress:
     case QEvent::KeyRelease: {

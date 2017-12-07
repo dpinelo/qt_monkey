@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+#include "testsuitesdlg.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])
@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
     a.setApplicationName("Qt Monkey Gui v2");
     a.setApplicationVersion("1.0");
 
-    MainWindow w;
+    TestSuitesDlg w;
     w.show();
 
     return a.exec();

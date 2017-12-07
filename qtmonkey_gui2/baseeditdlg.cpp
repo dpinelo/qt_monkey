@@ -13,7 +13,7 @@ BaseEditDlg::~BaseEditDlg()
 
 }
 
-const QVariantMap BaseEditDlg::data() const
+const QVariantMap BaseEditDlg::editedData()
 {
     return m_data;
 }
@@ -54,12 +54,12 @@ bool BaseEditDlg::editRecord(QSqlTableModel *model, int row, BaseEditDlg *dlg)
     {
         data[record.fieldName(i)] = record.value(i);
     }
-    dlg->setData(data);
+    dlg->setEditedData(data);
     if ( dlg->exec() == QDialog::Rejected )
     {
         return false;
     }
-    data = dlg->data();
+    data = dlg->editedData();
     QMapIterator<QString, QVariant> it(data);
     while (it.hasNext())
     {
@@ -78,7 +78,7 @@ bool BaseEditDlg::editRecord(QSqlTableModel *model, int row, BaseEditDlg *dlg)
     return true;
 }
 
-void BaseEditDlg::setData(const QVariantMap &data)
+void BaseEditDlg::setEditedData(const QVariantMap &data)
 {
     const QWidgetList list = findChildren<QWidget *>();
     m_data = data;
@@ -103,7 +103,6 @@ void BaseEditDlg::setData(const QVariantMap &data)
 
 void BaseEditDlg::accept()
 {
-    m_data.clear();
     const QWidgetList list = findChildren<QWidget *>();
     for (QWidget *widget : list)
     {
@@ -123,6 +122,5 @@ void BaseEditDlg::accept()
 
 void BaseEditDlg::reject()
 {
-    m_data.clear();
     QDialog::reject();
 }

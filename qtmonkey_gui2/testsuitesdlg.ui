@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>TestSuitesDlg</class>
- <widget class="QDialog" name="TestSuitesDlg">
+ <widget class="QMainWindow" name="TestSuitesDlg">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -13,68 +13,70 @@
   <property name="windowTitle">
    <string>Test Suites</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="1">
-    <widget class="QPushButton" name="pbEdit">
-     <property name="text">
-      <string>&amp;Edit Test Suite</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="2">
-    <widget class="QPushButton" name="pbRemove">
-     <property name="text">
-      <string>&amp;Remove Test Suite</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="4">
-    <widget class="QPushButton" name="pbQuit">
-     <property name="text">
-      <string>&amp;Quit</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QPushButton" name="pbAdd">
-     <property name="text">
-      <string>&amp;Add Test Suite</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0" colspan="5">
-    <widget class="QGroupBox" name="groupBox">
-     <property name="title">
-      <string>Available Test Suites</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QTableView" name="tableView">
-        <property name="editTriggers">
-         <set>QAbstractItemView::NoEditTriggers</set>
-        </property>
-        <property name="alternatingRowColors">
-         <bool>true</bool>
-        </property>
-        <property name="selectionBehavior">
-         <enum>QAbstractItemView::SelectRows</enum>
-        </property>
-        <property name="sortingEnabled">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="1" column="3">
-    <widget class="QPushButton" name="pbRun">
-     <property name="text">
-      <string>R&amp;un tests for selected test suites</string>
-     </property>
-    </widget>
-   </item>
-  </layout>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="1" column="1">
+     <widget class="QPushButton" name="pbEdit">
+      <property name="text">
+       <string>&amp;Edit Test Suite</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="2">
+     <widget class="QPushButton" name="pbRemove">
+      <property name="text">
+       <string>&amp;Remove Test Suite</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="4">
+     <widget class="QPushButton" name="pbQuit">
+      <property name="text">
+       <string>&amp;Quit</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QPushButton" name="pbAdd">
+      <property name="text">
+       <string>&amp;Add Test Suite</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0" colspan="5">
+     <widget class="QGroupBox" name="groupBox">
+      <property name="title">
+       <string>Available Test Suites</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QTableView" name="tableView">
+         <property name="editTriggers">
+          <set>QAbstractItemView::NoEditTriggers</set>
+         </property>
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+         <property name="sortingEnabled">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="1" column="3">
+     <widget class="QPushButton" name="pbRun">
+      <property name="text">
+       <string>R&amp;un tests for selected test suites</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
  </widget>
  <tabstops>
   <tabstop>tableView</tabstop>

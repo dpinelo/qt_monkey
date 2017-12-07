@@ -2,17 +2,18 @@
 #define QTMONKEYAPPCTRL_H
 
 #include <QtCore>
+#include "qtmonkey.hpp"
 
 class QtMonkeyAppCtrl : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit QtMonkeyAppCtrl(const QString &appPath,
-                             const QStringList &appArgs,
-                             QObject *parent = nullptr);
+    explicit QtMonkeyAppCtrl(QObject *parent = nullptr);
 
 public slots:
+    void recordTest(const QString &appPath,
+                    const QStringList &appArgs);
     void runScript(const QString &script,
                    const QString &scriptFilename = QString());
 signals:
@@ -26,11 +27,11 @@ signals:
 private slots:
     void monkeyAppError(QProcess::ProcessError);
     void monkeyAppFinished(int, QProcess::ExitStatus);
-    void monkeyAppNewOutput();
-    void monkeyAppNewErrOutput();
+    void monkeyAppNewOutput(const QString &msg);
+    void monkeyAppNewErrOutput(const QString &msg);
 
 private:
-    QProcess qtmonkeyApp_;
+    QPointer<qt_monkey_app::QtMonkey> m_monkey;
     QByteArray jsonFromMonkey_;
 };
 

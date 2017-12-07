@@ -15,20 +15,36 @@ public:
     QString m_arguments;
     QPointer<QsciLexer> m_lexer;
     QPointer<QsciAPIs> m_api;
+    int m_idTestSuite { -1 };
 
     TestEditDlgPrivate(TestEditDlg *qq) : q_ptr(qq)
     {
+        m_monkeyCtrl = new QtMonkeyAppCtrl(q_ptr);
+        QObject::connect(m_monkeyCtrl, SIGNAL(monkeyAppFinishedSignal(QString)), q_ptr,
+                SLOT(onMonkeyAppFinishedSignal(QString)));
+        QObject::connect(m_monkeyCtrl, SIGNAL(monkeyAppNewEvent(const QString &)), q_ptr,
+                SLOT(onMonkeyAppNewEvent(const QString &)));
+        QObject::connect(m_monkeyCtrl, SIGNAL(monkeyUserAppError(const QString &)), q_ptr,
+                SLOT(onMonkeyUserAppError(const QString &)));
+        QObject::connect(m_monkeyCtrl, SIGNAL(monkeyScriptEnd()), q_ptr,
+                SLOT(onMonkeyScriptEnd()));
+        QObject::connect(m_monkeyCtrl, SIGNAL(monkeScriptLog(const QString &)), q_ptr,
+                SLOT(onMonkeScriptLog(const QString &)));
+        QObject::connect(m_monkeyCtrl, SIGNAL(criticalError(const QString &)), q_ptr,
+                SLOT(showError(const QString &)));
     }
 
+    void setPosition();
     void record();
 };
 
-TestEditDlg::TestEditDlg(QWidget *parent) :
+TestEditDlg::TestEditDlg(int idTestSuite, QWidget *parent) :
     BaseEditDlg(parent),
     ui(new Ui::TestEditDlg),
     d(new TestEditDlgPrivate(this))
 {
     ui->setupUi(this);
+    d->m_idTestSuite = idTestSuite;
 
     ui->qsciCode->setAutoCompletionSource(QsciScintilla::AcsAll);
     ui->qsciCode->setAutoCompletionCaseSensitivity(false);
@@ -51,6 +67,8 @@ TestEditDlg::TestEditDlg(QWidget *parent) :
     d->m_lexer->setAPIs(d->m_api.data());
     d->m_api->prepare();
     ui->qsciCode->setLexer(d->m_lexer);
+
+    d->setPosition();
 }
 
 TestEditDlg::~TestEditDlg()
@@ -59,15 +77,27 @@ TestEditDlg::~TestEditDlg()
     delete ui;
 }
 
-void TestEditDlg::setData(const QVariantMap &data)
+const QVariantMap TestEditDlg::editedData()
 {
-    BaseEditDlg::setData(data);
+    BaseEditDlg::editedData();
     m_data["code"] = ui->qsciCode->text();
+    return m_data;
+}
+
+void TestEditDlg::setEditedData(const QVariantMap &data)
+{
+    BaseEditDlg::setEditedData(data);
 }
 
 void TestEditDlg::accept()
 {
-
+    if ( ui->leName->text().trimmed().isEmpty() )
+    {
+        QMessageBox::warning(this,
+                             qApp->applicationName(),
+                             tr("You must give a name test"));
+        return;
+    }
     BaseEditDlg::accept();
 }
 
@@ -103,10 +133,6 @@ void TestEditDlg::onMonkeyAppFinishedSignal(const QString &msg)
     else
     {
         logNewLine(MsgType::Default, QStringLiteral("The application has exited"));
-    }
-    if (d->m_monkeyCtrl != nullptr) {
-        d->m_monkeyCtrl->deleteLater();
-        d->m_monkeyCtrl = nullptr;
     }
     changeState(State::DoNothing);
 }
@@ -235,24 +261,28 @@ static QStringList splitCommandLine(const QString &cmdLine)
     return list;
 }
 
+void TestEditDlgPrivate::setPosition()
+{
+    QSqlDatabase db = QSqlDatabase::database();
+    const QString sql = "SELECT coalesce(max(position), 0) as c FROM testsuitestest WHERE idtestsuite=:idTestSuite";
+    QSqlQuery qry(db);
+    if ( !qry.prepare(sql) )
+    {
+        qDebug() << Q_FUNC_INFO << qry.lastError().text();
+        return;
+    }
+    qry.bindValue(":idTestSuite", m_idTestSuite);
+    if ( !qry.exec() )
+    {
+        qDebug() << Q_FUNC_INFO << qry.lastError().text();
+        return;
+    }
+    qry.first();
+    q_ptr->ui->lePosition->setText(QString("%1").arg(qry.value("c").toInt() + 1));
+}
+
 void TestEditDlgPrivate::record()
 {
-    if (m_monkeyCtrl == nullptr)
-    {
-        m_monkeyCtrl = new QtMonkeyAppCtrl(m_path,
-                                           splitCommandLine(m_arguments),
-                                           q_ptr);
-        QObject::connect(m_monkeyCtrl, SIGNAL(monkeyAppFinishedSignal(QString)), q_ptr,
-                SLOT(onMonkeyAppFinishedSignal(QString)));
-        QObject::connect(m_monkeyCtrl, SIGNAL(monkeyAppNewEvent(const QString &)), q_ptr,
-                SLOT(onMonkeyAppNewEvent(const QString &)));
-        QObject::connect(m_monkeyCtrl, SIGNAL(monkeyUserAppError(const QString &)), q_ptr,
-                SLOT(onMonkeyUserAppError(const QString &)));
-        QObject::connect(m_monkeyCtrl, SIGNAL(monkeyScriptEnd()), q_ptr,
-                SLOT(onMonkeyScriptEnd()));
-        QObject::connect(m_monkeyCtrl, SIGNAL(monkeScriptLog(const QString &)), q_ptr,
-                SLOT(onMonkeScriptLog(const QString &)));
-        QObject::connect(m_monkeyCtrl, SIGNAL(criticalError(const QString &)), q_ptr,
-                SLOT(showError(const QString &)));
-    }
+    m_monkeyCtrl->recordTest(m_path,
+                             splitCommandLine(m_arguments));
 }

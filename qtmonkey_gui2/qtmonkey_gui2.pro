@@ -3,11 +3,13 @@ QSCINTILLAPATH = /home/david/src/as7/trunk/src/3rdparty/qscintilla
 QSCINTILLABUILDPATH = /home/david/src/as7/trunk/build/5.9.2/unix/m64/debug
 QTMONKEYPATH = $$PWD/..
 
-QT       += core gui sql widgets
+QT       += core gui sql widgets network
 CONFIG += c++11
 
 TARGET = qtmonkey_gui2
 TEMPLATE = app
+
+include (qtmonkey_agent.pri)
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -29,25 +31,24 @@ LIBS += -L$$QTMONKEYPATH -lcommon_app_lib
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp \
         testsuitesdlg.cpp \
         database.cpp \
         testsuiteseditdlg.cpp \
         testeditdlg.cpp \
         baseeditdlg.cpp \
-    qtmonkeyappctrl.cpp
+        qtmonkeyappctrl.cpp \
+        qtmonkey.cpp
 
 HEADERS += \
-        mainwindow.h \
         testsuitesdlg.h \
         database.h \
         testsuiteseditdlg.h \
         testeditdlg.h \
         baseeditdlg.h \
-    qtmonkeyappctrl.h
+        qtmonkeyappctrl.h \
+        qtmonkey.hpp
 
 FORMS += \
-        mainwindow.ui \
         testsuitesdlg.ui \
         testeditdlg.ui \
         testsuiteseditdlg.ui

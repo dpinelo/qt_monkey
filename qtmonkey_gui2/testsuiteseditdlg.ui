@@ -120,7 +120,14 @@
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
       <item row="0" column="0" colspan="3">
-       <widget class="QTableView" name="tableView"/>
+       <widget class="QTableView" name="tableView">
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+       </widget>
       </item>
       <item row="1" column="0">
        <widget class="QPushButton" name="pbAdd">
@@ -163,12 +170,12 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>465</x>
-     <y>569</y>
+     <x>619</x>
+     <y>573</y>
     </hint>
     <hint type="destinationlabel">
-     <x>418</x>
-     <y>556</y>
+     <x>359</x>
+     <y>568</y>
     </hint>
    </hints>
   </connection>
@@ -179,12 +186,12 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>864</x>
-     <y>569</y>
+     <x>587</x>
+     <y>566</y>
     </hint>
     <hint type="destinationlabel">
-     <x>318</x>
-     <y>558</y>
+     <x>269</x>
+     <y>557</y>
     </hint>
    </hints>
   </connection>

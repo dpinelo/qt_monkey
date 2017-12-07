@@ -21,12 +21,12 @@ public:
     ~TestSuitesEditDlg();
 
 public slots:
-    void setData(const QVariantMap &data) Q_DECL_OVERRIDE;
+    void setEditedData(const QVariantMap &data) Q_DECL_OVERRIDE;
     void accept() Q_DECL_OVERRIDE;
     void on_pbSearch_clicked();
     void on_pbAdd_clicked();
     void on_pbEdit_clicked();
-    void on_obRemove_clicked();
+    void on_pbRemove_clicked();
 
 private:
     Ui::TestSuitesEditDlg *ui;
