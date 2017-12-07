@@ -21,6 +21,8 @@ void QtMonkeyAppCtrl::recordTest(const QString &appPath, const QStringList &appA
             SLOT(monkeyAppNewOutput(QString)));
     connect(m_monkey, SIGNAL(newUserAppErrorOutput(QString)), this,
             SLOT(monkeyAppNewErrOutput(QString)));
+    connect(m_monkey, SIGNAL(newScriptError(QString)), this,
+            SLOT(monkeyAppNewOutput(QString)));
 
     m_monkey->runApp(appPath, appArgs);
 }
@@ -89,15 +91,20 @@ void QtMonkeyAppCtrl::monkeyAppNewErrOutput(const QString &msg)
     qDebug("MONKEY: %s", qPrintable(errOut));
 }
 
-void QtMonkeyAppCtrl::runScript(const QString &script,
+void QtMonkeyAppCtrl::runScript(const QString &appPath,
+                                const QStringList &appArgs,
+                                const QString &script,
                                 const QString &scriptFileName)
 {
+    recordTest(appPath, appArgs);
+
     const std::string data
         = qt_monkey_app::createPacketFromRunScript(script, scriptFileName)
           + '\n';
     quint64 sentBytes = 0;
     do {
         QBuffer buffer;
+        buffer.open(QIODevice::WriteOnly);
         qint64 nbytes = buffer.write(data.data() + sentBytes,
                                      data.size() - sentBytes);
         if (nbytes < 0) {

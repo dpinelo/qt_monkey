@@ -75,6 +75,19 @@ public slots:
       * */
     void keyClicks(const QString &widgetName, const QString &keyseq);
 
+    /**
+     * Emulation of close widget using X button
+     * @brief closeWidget
+     * @param widgetName
+     */
+    void closeWidget(const QString &widgetName);
+
+    /**
+     * Close application window
+     * @brief closeApp
+     */
+    void closeApp();
+
     //@{
     /**
      * Group of functions to emulate activate item (menu item, list item etc)

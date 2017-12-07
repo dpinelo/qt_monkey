@@ -882,8 +882,10 @@ void ScriptAPI::keyClicks(const QString &widgetName, const QString &keySeq)
     DBGPRINT("%s begin name %s, keys %s", Q_FUNC_INFO, qPrintable(widgetName),
              qPrintable(keySeq));
 
-    QWidget *w = getWidgetWithSuchName(agent_, widgetName,
-                                       waitWidgetAppearTimeoutSec_, true);
+    QWidget *w = getWidgetWithSuchName(agent_,
+                                       widgetName,
+                                       waitWidgetAppearTimeoutSec_,
+                                       true);
 
     if (w == nullptr) {
         agent_.throwScriptError(
@@ -901,6 +903,59 @@ void ScriptAPI::keyClicks(const QString &widgetName, const QString &keySeq)
             QTest::keyClicks(w, keySeq);
             DBGPRINT("%s: key(%s) clicks for widget DONE", Q_FUNC_INFO,
                      qPrintable(keySeq));
+            return QString();
+        },
+        newEventLoopWaitTimeoutSecs_);
+
+    if (!errMsg.isEmpty()) {
+        DBGPRINT("%s: error %s", Q_FUNC_INFO, qPrintable(errMsg));
+        agent_.throwScriptError(std::move(errMsg));
+    }
+}
+
+void ScriptAPI::closeWidget(const QString &widgetName)
+{
+    Step step(agent_);
+
+    DBGPRINT("%s begin name %s", Q_FUNC_INFO, qPrintable(widgetName));
+
+    QWidget *w = getWidgetWithSuchName(agent_,
+                                       widgetName,
+                                       waitWidgetAppearTimeoutSec_,
+                                       true);
+
+    if (w == nullptr) {
+        agent_.throwScriptError(
+            QStringLiteral("Can not find widget with such name %1")
+                .arg(widgetName));
+        return;
+    }
+
+    QString errMsg = agent_.runCodeInGuiThreadSyncWithTimeout(
+        [w] {
+            if (!w->hasFocus())
+                w->setFocus(Qt::ShortcutFocusReason);
+            DBGPRINT("%s: close widget", Q_FUNC_INFO);
+            w->close();
+            DBGPRINT("%s: close widget DONE", Q_FUNC_INFO);
+            return QString();
+        },
+        newEventLoopWaitTimeoutSecs_);
+
+    if (!errMsg.isEmpty()) {
+        DBGPRINT("%s: error %s", Q_FUNC_INFO, qPrintable(errMsg));
+        agent_.throwScriptError(std::move(errMsg));
+    }
+}
+
+void ScriptAPI::closeApp()
+{
+    Step step(agent_);
+    QString errMsg = agent_.runCodeInGuiThreadSyncWithTimeout(
+        [] {
+            DBGPRINT("%s: close app", Q_FUNC_INFO);
+            qApp->exit();
+            DBGPRINT("%s: close app DONE", Q_FUNC_INFO);
             return QString();
         },
         newEventLoopWaitTimeoutSecs_);

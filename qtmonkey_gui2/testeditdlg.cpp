@@ -22,20 +22,23 @@ public:
         m_monkeyCtrl = new QtMonkeyAppCtrl(q_ptr);
         QObject::connect(m_monkeyCtrl, SIGNAL(monkeyAppFinishedSignal(QString)), q_ptr,
                 SLOT(onMonkeyAppFinishedSignal(QString)));
-        QObject::connect(m_monkeyCtrl, SIGNAL(monkeyAppNewEvent(const QString &)), q_ptr,
-                SLOT(onMonkeyAppNewEvent(const QString &)));
-        QObject::connect(m_monkeyCtrl, SIGNAL(monkeyUserAppError(const QString &)), q_ptr,
-                SLOT(onMonkeyUserAppError(const QString &)));
+        QObject::connect(m_monkeyCtrl, SIGNAL(monkeyAppNewEvent(QString)), q_ptr,
+                SLOT(onMonkeyAppNewEvent(QString)));
+        QObject::connect(m_monkeyCtrl, SIGNAL(monkeyUserAppError(QString)), q_ptr,
+                SLOT(onMonkeyUserAppError(QString)));
         QObject::connect(m_monkeyCtrl, SIGNAL(monkeyScriptEnd()), q_ptr,
                 SLOT(onMonkeyScriptEnd()));
-        QObject::connect(m_monkeyCtrl, SIGNAL(monkeScriptLog(const QString &)), q_ptr,
-                SLOT(onMonkeScriptLog(const QString &)));
-        QObject::connect(m_monkeyCtrl, SIGNAL(criticalError(const QString &)), q_ptr,
+        QObject::connect(m_monkeyCtrl, SIGNAL(monkeScriptLog(QString)), q_ptr,
+                SLOT(onMonkeScriptLog(QString)));
+        QObject::connect(m_monkeyCtrl, SIGNAL(criticalError(QString)), q_ptr,
                 SLOT(showError(const QString &)));
+        QObject::connect(m_monkeyCtrl, SIGNAL(newScriptError(QString)), q_ptr,
+                SLOT(onMonkeScriptLog(QString)));
     }
 
     void setPosition();
     void record();
+    void play();
 };
 
 TestEditDlg::TestEditDlg(int idTestSuite, QWidget *parent) :
@@ -87,6 +90,7 @@ const QVariantMap TestEditDlg::editedData()
 void TestEditDlg::setEditedData(const QVariantMap &data)
 {
     BaseEditDlg::setEditedData(data);
+    ui->qsciCode->setText(m_data.value(QStringLiteral("code")).toString());
 }
 
 void TestEditDlg::accept()
@@ -110,6 +114,12 @@ void TestEditDlg::on_pbRecord_clicked()
 {
     changeState(State::RecordEvents);
     d->record();
+}
+
+void TestEditDlg::on_pbReplay_clicked()
+{
+    changeState(State::PlayingEvents);
+    d->play();
 }
 
 void TestEditDlg::setPath(const QString &path)
@@ -195,16 +205,19 @@ void TestEditDlg::changeState(TestEditDlg::State val)
         ui->pbRecord->setEnabled(true);
         ui->buttonBox->setEnabled(true);
         ui->qsciCode->setEnabled(true);
+        ui->pbReplay->setEnabled(true);
         break;
     case State::RecordEvents:
         ui->pbRecord->setEnabled(false);
         ui->buttonBox->setEnabled(false);
         ui->qsciCode->setEnabled(true);
+        ui->pbReplay->setEnabled(false);
         break;
     case State::PlayingEvents:
         ui->qsciCode->setEnabled(false);
         ui->pbRecord->setEnabled(false);
         ui->buttonBox->setEnabled(false);
+        ui->pbReplay->setEnabled(false);
         break;
     }
 }
@@ -285,4 +298,12 @@ void TestEditDlgPrivate::record()
 {
     m_monkeyCtrl->recordTest(m_path,
                              splitCommandLine(m_arguments));
+}
+
+void TestEditDlgPrivate::play()
+{
+    m_monkeyCtrl->runScript(m_path,
+                            splitCommandLine(m_arguments),
+                            q_ptr->ui->qsciCode->text(),
+                            "test.js");
 }

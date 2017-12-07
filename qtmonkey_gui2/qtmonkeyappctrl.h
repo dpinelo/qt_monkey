@@ -14,7 +14,9 @@ public:
 public slots:
     void recordTest(const QString &appPath,
                     const QStringList &appArgs);
-    void runScript(const QString &script,
+    void runScript(const QString &appPath,
+                   const QStringList &appArgs,
+                   const QString &script,
                    const QString &scriptFilename = QString());
 signals:
     void monkeyAppFinishedSignal(QString msg);

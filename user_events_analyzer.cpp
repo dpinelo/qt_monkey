@@ -900,6 +900,9 @@ bool UserEventsAnalyzer::eventFilter(QObject *obj, QEvent *event)
             qPrintable(static_cast<QShortcutEvent *>(event)->key().toString()),
             qPrintable(qt_monkey_agent::fullQtWidgetId(*obj)));
     }
+    case QEvent::Close: {
+        qDebug() << "Entra aquí?";
+    }
     // fall through
     default: {
         const QString code

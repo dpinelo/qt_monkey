@@ -38,6 +38,7 @@ public slots:
     void accept() Q_DECL_OVERRIDE Q_DECL_FINAL;
     void reject() Q_DECL_OVERRIDE Q_DECL_FINAL;
     void on_pbRecord_clicked();
+    void on_pbReplay_clicked();
     void setPath(const QString &path);
     void setArguments(const QString &arguments);
     void onMonkeyAppFinishedSignal(const QString &msg);
