@@ -37,7 +37,8 @@ SOURCES += \
         testeditdlg.cpp \
         baseeditdlg.cpp \
         qtmonkeyappctrl.cpp \
-        qtmonkey.cpp
+        qtmonkey.cpp \
+    common.cpp
 
 HEADERS += \
         testsuitesdlg.h \
@@ -46,7 +47,8 @@ HEADERS += \
         testeditdlg.h \
         baseeditdlg.h \
         qtmonkeyappctrl.h \
-        qtmonkey.hpp
+        qtmonkey.hpp \
+    common.h
 
 FORMS += \
         testsuitesdlg.ui \

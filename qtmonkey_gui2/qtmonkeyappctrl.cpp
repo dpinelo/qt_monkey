@@ -9,9 +9,14 @@ QtMonkeyAppCtrl::QtMonkeyAppCtrl(QObject *parent)
 {
 }
 
+QtMonkeyAppCtrl::~QtMonkeyAppCtrl()
+{
+    m_monkey->deleteLater();
+}
+
 void QtMonkeyAppCtrl::recordTest(const QString &appPath, const QStringList &appArgs)
 {
-    m_monkey = new qt_monkey_app::QtMonkey(/*exitOnScriptError*/ true, this);
+    m_monkey = new qt_monkey_app::QtMonkey(/*exitOnScriptError*/ true);
 
     connect(m_monkey, SIGNAL(newUserAppError(QProcess::ProcessError)), this,
             SLOT(monkeyAppError(QProcess::ProcessError)));
@@ -22,7 +27,7 @@ void QtMonkeyAppCtrl::recordTest(const QString &appPath, const QStringList &appA
     connect(m_monkey, SIGNAL(newUserAppErrorOutput(QString)), this,
             SLOT(monkeyAppNewErrOutput(QString)));
     connect(m_monkey, SIGNAL(newScriptError(QString)), this,
-            SLOT(monkeyAppNewOutput(QString)));
+            SIGNAL(newScriptError(QString)));
 
     m_monkey->runApp(appPath, appArgs);
 }
@@ -31,7 +36,6 @@ void QtMonkeyAppCtrl::monkeyAppError(QProcess::ProcessError err)
 {
     qDebug("%s: err %d", Q_FUNC_INFO, static_cast<int>(err));
     emit monkeyAppFinishedSignal(qt_monkey_common::processErrorToString(err));
-    m_monkey->deleteLater();
 }
 
 void QtMonkeyAppCtrl::monkeyAppFinished(int exitCode,
@@ -73,7 +77,7 @@ void QtMonkeyAppCtrl::monkeyAppNewOutput(const QString &msg)
         [this]() { // on script end
             emit monkeyScriptEnd();
         },
-        [this](QString scriptLog) { emit monkeScriptLog(scriptLog); },
+        [this](QString scriptLog) { emit monkeyScriptLog(scriptLog); },
         [this](QString data) {
             emit monkeyAppFinishedSignal(
                 T_("Internal Error: problem with monkey<->gui protocol: %1")
@@ -86,8 +90,7 @@ void QtMonkeyAppCtrl::monkeyAppNewOutput(const QString &msg)
 
 void QtMonkeyAppCtrl::monkeyAppNewErrOutput(const QString &msg)
 {
-    const QString errOut
-        = QString::fromLocal8Bit(msg.toLocal8Bit());
+    const QString errOut = QString::fromLocal8Bit(msg.toLocal8Bit());
     qDebug("MONKEY: %s", qPrintable(errOut));
 }
 
@@ -98,8 +101,7 @@ void QtMonkeyAppCtrl::runScript(const QString &appPath,
 {
     recordTest(appPath, appArgs);
 
-    const std::string data
-        = qt_monkey_app::createPacketFromRunScript(script, scriptFileName)
+    const std::string data = qt_monkey_app::createPacketFromRunScript(script, scriptFileName)
           + '\n';
     quint64 sentBytes = 0;
     do {
@@ -114,5 +116,13 @@ void QtMonkeyAppCtrl::runScript(const QString &appPath,
         m_monkey->command(buffer.buffer());
         sentBytes += nbytes;
     } while (sentBytes < data.size());
+}
+
+void QtMonkeyAppCtrl::killApp()
+{
+    if ( m_monkey )
+    {
+        QMetaObject::invokeMethod(m_monkey.data(), "killApp", Qt::QueuedConnection);
+    }
 }
 

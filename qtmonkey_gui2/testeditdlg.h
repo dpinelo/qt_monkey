@@ -45,7 +45,8 @@ public slots:
     void onMonkeyAppNewEvent(const QString &scriptLine);
     void onMonkeyUserAppError(const QString &errMsg);
     void onMonkeyScriptEnd();
-    void onMonkeScriptLog(const QString &msg);
+    void onMonkeyScriptLog(const QString &msg);
+    void onMonkeyScriptError(const QString &msg);
     void logNewLine(MsgType msgType, const QString &msg);
     void changeState(State val);
     void showError(const QString &msg);

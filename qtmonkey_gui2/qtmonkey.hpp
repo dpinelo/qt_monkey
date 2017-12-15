@@ -56,6 +56,7 @@ public:
 
 public slots:
     void command(const QByteArray &command);
+    void killApp();
 
 private slots:
     void userAppError(QProcess::ProcessError);

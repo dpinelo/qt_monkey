@@ -72,14 +72,7 @@ QtMonkey::QtMonkey(bool exitOnScriptError, QObject *parent)
 
 QtMonkey::~QtMonkey()
 {
-    if (userApp_.state() != QProcess::NotRunning) {
-        userApp_.terminate();
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 3000 /*ms*/);
-        userApp_.kill();
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 1000 /*ms*/);
-    }
-    // so any signals from channel will be disconected
-    channelWithAgent_.close();
+    killApp();
 }
 
 void QtMonkey::communicationWithAgentError(const QString &errStr)
@@ -145,7 +138,19 @@ void QtMonkey::command(const QByteArray &command)
         [this](QString errMsg) {
             std::cerr
                 << T_("Can not parse gui<->monkey protocol: %1\n").arg(errMsg);
-        });
+    });
+}
+
+void QtMonkey::killApp()
+{
+    if (userApp_.state() != QProcess::NotRunning) {
+        userApp_.terminate();
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 10000 /*ms*/);
+        userApp_.kill();
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 5000 /*ms*/);
+    }
+    // so any signals from channel will be disconected
+    channelWithAgent_.close();
 }
 
 void QtMonkey::onScriptError(QString errMsg)

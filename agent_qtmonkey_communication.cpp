@@ -225,7 +225,9 @@ bool CommunicationMonkeyPart::isConnectedState() const
 
 void CommunicationMonkeyPart::close()
 {
-    assert(controlSock_.get() != nullptr);
+    if (controlSock_ == nullptr) {
+        return;
+    }
     if (controlSock_->isListening())
         controlSock_->close();
     controlSock_.reset(nullptr);

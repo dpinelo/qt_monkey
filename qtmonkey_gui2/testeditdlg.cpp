@@ -1,6 +1,7 @@
 #include "testeditdlg.h"
 #include "ui_testeditdlg.h"
 #include "baseeditdlg.h"
+#include "common.h"
 #include "qtmonkeyappctrl.h"
 #include "Qsci/qsciapis.h"
 #include "Qsci/qscilexerjavascript.h"
@@ -28,12 +29,14 @@ public:
                 SLOT(onMonkeyUserAppError(QString)));
         QObject::connect(m_monkeyCtrl, SIGNAL(monkeyScriptEnd()), q_ptr,
                 SLOT(onMonkeyScriptEnd()));
-        QObject::connect(m_monkeyCtrl, SIGNAL(monkeScriptLog(QString)), q_ptr,
-                SLOT(onMonkeScriptLog(QString)));
+        QObject::connect(m_monkeyCtrl, SIGNAL(monkeyScriptLog(QString)), q_ptr,
+                SLOT(onMonkeyScriptLog(QString)));
         QObject::connect(m_monkeyCtrl, SIGNAL(criticalError(QString)), q_ptr,
                 SLOT(showError(const QString &)));
         QObject::connect(m_monkeyCtrl, SIGNAL(newScriptError(QString)), q_ptr,
-                SLOT(onMonkeScriptLog(QString)));
+                SLOT(onMonkeyScriptLog(QString)));
+        QObject::connect(m_monkeyCtrl, SIGNAL(newScriptError(QString)), q_ptr,
+                SLOT(onMonkeyScriptError(QString)));
     }
 
     void setPosition();
@@ -48,6 +51,8 @@ TestEditDlg::TestEditDlg(int idTestSuite, QWidget *parent) :
 {
     ui->setupUi(this);
     d->m_idTestSuite = idTestSuite;
+
+    ui->teScriptError->setVisible(false);
 
     ui->qsciCode->setAutoCompletionSource(QsciScintilla::AcsAll);
     ui->qsciCode->setAutoCompletionCaseSensitivity(false);
@@ -136,9 +141,8 @@ void TestEditDlg::onMonkeyAppFinishedSignal(const QString &msg)
 {
     if (!msg.isEmpty())
     {
-        QMessageBox::critical(this,
-                              qApp->applicationName(),
-                              msg);
+        ui->teScriptError->append(msg);
+        ui->teScriptError->setVisible(true);
     }
     else
     {
@@ -169,9 +173,18 @@ void TestEditDlg::onMonkeyUserAppError(const QString &errMsg)
 void TestEditDlg::onMonkeyScriptEnd()
 {
     changeState(State::DoNothing);
+    ui->teScriptError->setVisible(true);
+    ui->teScriptError->append(tr("Script ejecutado con éxito"));
 }
 
-void TestEditDlg::onMonkeScriptLog(const QString &msg)
+void TestEditDlg::onMonkeyScriptError(const QString &msg)
+{
+    ui->teScriptError->setVisible(true);
+    ui->teScriptError->append(msg);
+    d->m_monkeyCtrl->killApp();
+}
+
+void TestEditDlg::onMonkeyScriptLog(const QString &msg)
 {
     logNewLine(MsgType::Default, msg);
 }
@@ -229,51 +242,6 @@ void TestEditDlg::showError(const QString &msg)
                           msg);
 }
 
-static QStringList splitCommandLine(const QString &cmdLine)
-{
-    QStringList list;
-    QString arg;
-    bool escape = false;
-    enum { Idle, Arg, QuotedArg } state = Idle;
-    for (QChar const c : cmdLine) {
-        if (!escape && c == '\\') {
-            escape = true;
-            continue;
-        }
-        switch (state) {
-        case Idle:
-            if (!escape && c == '"')
-                state = QuotedArg;
-            else if (escape || !c.isSpace()) {
-                arg += c;
-                state = Arg;
-            }
-            break;
-        case Arg:
-            if (!escape && c == '"') {
-                state = QuotedArg;
-            } else if (escape || !c.isSpace()) {
-                arg += c;
-            } else {
-                list << arg;
-                arg.clear();
-                state = Idle;
-            }
-            break;
-        case QuotedArg:
-            if (!escape && c == '"')
-                state = arg.isEmpty() ? Idle : Arg;
-            else
-                arg += c;
-            break;
-        }
-        escape = false;
-    }
-    if (!arg.isEmpty())
-        list << arg;
-    return list;
-}
-
 void TestEditDlgPrivate::setPosition()
 {
     QSqlDatabase db = QSqlDatabase::database();
@@ -291,17 +259,23 @@ void TestEditDlgPrivate::setPosition()
         return;
     }
     qry.first();
-    q_ptr->ui->lePosition->setText(QString("%1").arg(qry.value("c").toInt() + 1));
+    q_ptr->ui->lePosition->setText(QString("%1").arg(qry.value(QStringLiteral("c")).toInt() + 1));
 }
 
 void TestEditDlgPrivate::record()
 {
+    q_ptr->ui->teScriptError->clear();
+    q_ptr->ui->teScriptError->setVisible(false);
+    q_ptr->ui->teLog->clear();
     m_monkeyCtrl->recordTest(m_path,
                              splitCommandLine(m_arguments));
 }
 
 void TestEditDlgPrivate::play()
 {
+    q_ptr->ui->teScriptError->clear();
+    q_ptr->ui->teScriptError->setVisible(false);
+    q_ptr->ui->teLog->clear();
     m_monkeyCtrl->runScript(m_path,
                             splitCommandLine(m_arguments),
                             q_ptr->ui->qsciCode->text(),

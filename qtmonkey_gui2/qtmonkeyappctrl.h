@@ -10,6 +10,7 @@ class QtMonkeyAppCtrl : public QObject
 
 public:
     explicit QtMonkeyAppCtrl(QObject *parent = nullptr);
+    virtual ~QtMonkeyAppCtrl();
 
 public slots:
     void recordTest(const QString &appPath,
@@ -18,13 +19,16 @@ public slots:
                    const QStringList &appArgs,
                    const QString &script,
                    const QString &scriptFilename = QString());
+    void killApp();
+
 signals:
     void monkeyAppFinishedSignal(QString msg);
-    void monkeyAppNewEvent(const QString &scriptLine);
-    void monkeyUserAppError(const QString &errMsg);
+    void monkeyAppNewEvent(QString scriptLine);
+    void monkeyUserAppError(QString errMsg);
     void monkeyScriptEnd();
-    void monkeScriptLog(const QString &);
-    void criticalError(const QString &);
+    void monkeyScriptLog(QString);
+    void criticalError(QString);
+    void newScriptError(QString);
 
 private slots:
     void monkeyAppError(QProcess::ProcessError);
